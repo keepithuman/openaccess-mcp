@@ -3,33 +3,80 @@ version: '3.8'
 services:
   openaccess-mcp:
     build: .
+    container_name: openaccess-mcp-server
     ports:
-      - "8080:8080"
+      - "8000:8000"
     volumes:
-      - ./examples/profiles:/app/profiles
-      - ./examples/secrets:/app/secrets
+      - ./profiles:/app/profiles:ro
+      - ./secrets:/app/secrets:ro
       - ./audit:/app/audit
+      - ./logs:/app/logs
     environment:
-      - PYTHONPATH=/app
-    command: ["python", "-m", "openaccess_mcp.server", "--profiles", "/app/profiles"]
+      - PYTHONUNBUFFERED=1
+      - MCP_HOST=0.0.0.0
+      - MCP_PORT=8000
+      - PROFILES_DIR=/app/profiles
+      - SECRETS_DIR=/app/secrets
+      - AUDIT_LOG_PATH=/app/audit/audit.log
+      - AUDIT_KEY_PATH=/app/audit/audit.key
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import openaccess_mcp; print('OK')"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - openaccess-network
 
-  # Demo SSH target for testing
-  ssh-target:
-    image: linuxserver/openssh-server:latest
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=UTC
-      - USER_NAME=testuser
-      - USER_PASSWORD=testpass
+  # Optional: Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    container_name: openaccess-redis
     ports:
-      - "2222:2222"
+      - "6379:6379"
     volumes:
-      - ./examples/ssh-target:/config
-    command: ["/bin/bash", "-c", "echo 'testuser:testpass' | chpasswd && /init"]
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - openaccess-network
+
+  # Optional: PostgreSQL for audit logging and user management
+  postgres:
+    image: postgres:15-alpine
+    container_name: openaccess-postgres
+    environment:
+      POSTGRES_DB: openaccess
+      POSTGRES_USER: openaccess
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-openaccess123}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - openaccess-network
+
+  # Optional: Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: openaccess-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - openaccess-mcp
+    restart: unless-stopped
+    networks:
+      - openaccess-network
+
+volumes:
+  redis-data:
+  postgres-data:
+
+networks:
+  openaccess-network:
+    driver: bridge
