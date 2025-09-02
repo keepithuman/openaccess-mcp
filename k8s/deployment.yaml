@@ -1,0 +1,224 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openaccess-mcp
+  labels:
+    app: openaccess-mcp
+    version: v0.0.1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: openaccess-mcp
+  template:
+    metadata:
+      labels:
+        app: openaccess-mcp
+        version: v0.0.1
+    spec:
+      serviceAccountName: openaccess-mcp-sa
+      containers:
+      - name: openaccess-mcp
+        image: openaccess-mcp:0.0.1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+          name: mcp
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: MCP_HOST
+          value: "0.0.0.0"
+        - name: MCP_PORT
+          value: "8000"
+        - name: PROFILES_DIR
+          value: "/app/profiles"
+        - name: SECRETS_DIR
+          value: "/app/secrets"
+        - name: AUDIT_LOG_PATH
+          value: "/app/audit/audit.log"
+        - name: AUDIT_KEY_PATH
+          value: "/app/audit/audit.key"
+        - name: REDIS_URL
+          value: "redis://openaccess-redis:6379"
+        - name: POSTGRES_URL
+          value: "postgresql://openaccess:$(POSTGRES_PASSWORD)@openaccess-postgres:5432/openaccess"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: openaccess-mcp-secrets
+              key: postgres-password
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        volumeMounts:
+        - name: profiles
+          mountPath: /app/profiles
+          readOnly: true
+        - name: secrets
+          mountPath: /app/secrets
+          readOnly: true
+        - name: audit
+          mountPath: /app/audit
+        - name: logs
+          mountPath: /app/logs
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: profiles
+        configMap:
+          name: openaccess-profiles
+      - name: secrets
+        secret:
+          secretName: openaccess-secrets
+      - name: audit
+        persistentVolumeClaim:
+          claimName: openaccess-audit-pvc
+      - name: logs
+        persistentVolumeClaim:
+          claimName: openaccess-logs-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openaccess-mcp-service
+  labels:
+    app: openaccess-mcp
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: mcp
+  selector:
+    app: openaccess-mcp
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: openaccess-mcp-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+spec:
+  tls:
+  - hosts:
+    - openaccess-mcp.example.com
+    secretName: openaccess-mcp-tls
+  rules:
+  - host: openaccess-mcp.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: openaccess-mcp-service
+            port:
+              number: 8000
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openaccess-profiles
+data:
+  default-profile.json: |
+    {
+      "id": "default",
+      "host": "localhost",
+      "port": 22,
+      "protocols": ["ssh", "sftp", "rsync", "tunnel"],
+      "auth": {
+        "type": "file_ref",
+        "ref": "default-auth"
+      },
+      "policy": {
+        "roles": ["admin"],
+        "command_allowlist": ["^ls$", "^pwd$", "^whoami$"],
+        "command_denylist": ["^rm -rf", "^sudo"],
+        "deny_sudo": true,
+        "max_session_seconds": 900,
+        "record_session": true,
+        "require_change_ticket_for": ["delete", "sudo"],
+        "max_concurrent_sessions": 1
+      },
+      "tags": ["default", "local"],
+      "description": "Default local development profile"
+    }
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: openaccess-mcp-secrets
+type: Opaque
+data:
+  postgres-password: b3BlbmFjY2VzczEyMw==  # base64 encoded
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: openaccess-audit-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: openaccess-logs-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: openaccess-mcp-sa
+  labels:
+    app: openaccess-mcp
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: openaccess-mcp-role
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "endpoints"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: openaccess-mcp-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: openaccess-mcp-role
+subjects:
+- kind: ServiceAccount
+  name: openaccess-mcp-sa
+  namespace: default
