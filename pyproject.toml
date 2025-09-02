@@ -43,6 +43,7 @@ dependencies = [
     "rich>=13.7.0",
     "aiofiles>=23.2.0",
     "cryptography>=41.0.0",
+    "prometheus-client>=0.17.0",
 ]
 
 [project.optional-dependencies]
