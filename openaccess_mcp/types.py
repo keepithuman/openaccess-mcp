@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from typing import Any, Dict, List, Literal, Optional, Union
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 import hashlib
 import json
 
@@ -13,7 +13,8 @@ class AuthRef(BaseModel):
     type: Literal["vault_ref", "file_ref", "keychain_ref"]
     ref: str
     
-    @validator("ref")
+    @field_validator("ref")
+    @classmethod
     def validate_ref(cls, v: str) -> str:
         """Validate reference format based on type."""
         if not v or not v.strip():
@@ -42,14 +43,16 @@ class Policy(BaseModel):
     )
     max_concurrent_sessions: int = Field(default=1, description="Maximum concurrent sessions per user")
     
-    @validator("max_session_seconds")
+    @field_validator("max_session_seconds")
+    @classmethod
     def validate_session_timeout(cls, v: int) -> int:
         """Validate session timeout is reasonable."""
         if v < 60 or v > 86400:  # 1 minute to 24 hours
             raise ValueError("Session timeout must be between 60 and 86400 seconds")
         return v
     
-    @validator("max_concurrent_sessions")
+    @field_validator("max_concurrent_sessions")
+    @classmethod
     def validate_concurrent_sessions(cls, v: int) -> int:
         """Validate concurrent sessions limit."""
         if v < 1 or v > 10:

@@ -836,7 +836,7 @@ class OpenAccessMCPServer:
         # Initialize the server
         init_options = InitializationOptions(
             server_name="openaccess-mcp",
-            server_version="0.1.0",
+            server_version="0.0.1",
             capabilities=self.server.get_capabilities(
                 notification_options=None,
                 experimental_capabilities={}

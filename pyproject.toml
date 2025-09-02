@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "openaccess-mcp"
-version = "0.1.0"
+version = "0.0.1"
 description = "A secure, policy-driven MCP server for remote access with SSH, SFTP, rsync, and tunneling capabilities"
 readme = "README.md"
 license = {text = "Apache-2.0"}
