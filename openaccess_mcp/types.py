@@ -75,7 +75,8 @@ class Profile(BaseModel):
     tags: List[str] = Field(default_factory=list, description="Profile tags for organization")
     description: Optional[str] = Field(None, description="Human-readable description")
     
-    @validator("id")
+    @field_validator("id")
+    @classmethod
     def validate_id(cls, v: str) -> str:
         """Validate profile ID format."""
         if not v or not v.strip():
@@ -84,21 +85,24 @@ class Profile(BaseModel):
             raise ValueError("Profile ID must be alphanumeric with hyphens/underscores only")
         return v.strip()
     
-    @validator("host")
+    @field_validator("host")
+    @classmethod
     def validate_host(cls, v: str) -> str:
         """Validate host address."""
         if not v or not v.strip():
             raise ValueError("Host cannot be empty")
         return v.strip()
     
-    @validator("port")
+    @field_validator("port")
+    @classmethod
     def validate_port(cls, v: int) -> int:
         """Validate port number."""
         if v < 1 or v > 65535:
             raise ValueError("Port must be between 1 and 65535")
         return v
     
-    @validator("protocols")
+    @field_validator("protocols")
+    @classmethod
     def validate_protocols(cls, v: List[str]) -> List[str]:
         """Validate protocol list."""
         valid_protocols = {"ssh", "sftp", "rsync", "tunnel", "vpn", "rdp"}
@@ -159,7 +163,8 @@ class AuditRecord(BaseModel):
     chain_sig: Optional[str] = Field(None, description="Ed25519 signature of this record")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
     
-    @validator("ts")
+    @field_validator("ts")
+    @classmethod
     def validate_timestamp(cls, v: str) -> str:
         """Validate ISO timestamp format."""
         try:
@@ -168,7 +173,8 @@ class AuditRecord(BaseModel):
         except ValueError:
             raise ValueError("Invalid ISO timestamp format")
     
-    @validator("input_hash")
+    @field_validator("input_hash")
+    @classmethod
     def validate_input_hash(cls, v: str) -> str:
         """Validate hash format."""
         if not v.startswith("sha256:"):
@@ -177,7 +183,8 @@ class AuditRecord(BaseModel):
             raise ValueError("Invalid SHA256 hash length")
         return v
     
-    @validator("stdout_hash", "stderr_hash")
+    @field_validator("stdout_hash", "stderr_hash")
+    @classmethod
     def validate_output_hash(cls, v: Optional[str]) -> Optional[str]:
         """Validate output hash format if present."""
         if v is None:
@@ -210,7 +217,7 @@ class AuditRecord(BaseModel):
     
     def to_jsonl(self) -> str:
         """Convert to JSONL format for logging."""
-        return json.dumps(self.dict(), separators=(",", ":"))
+        return json.dumps(self.model_dump(), separators=(",", ":"))
 
 
 class SecretData(BaseModel):
@@ -221,7 +228,8 @@ class SecretData(BaseModel):
     password: Optional[str] = None
     passphrase: Optional[str] = None
     
-    @validator("username")
+    @field_validator("username")
+    @classmethod
     def validate_username(cls, v: str) -> str:
         """Validate username."""
         if not v or not v.strip():

@@ -138,7 +138,7 @@ class OpenAccessMCPServer:
             
             # Check if SFTP is enabled
             if "sftp" not in profile.protocols:
-                return ToolResult.error_result("SFTP not enabled for this profile").dict()
+                return ToolResult.error_result("SFTP not enabled for this profile").model_dump()
             
             # Resolve secrets
             secret = await self.secret_store.resolve(profile.auth)
@@ -156,7 +156,7 @@ class OpenAccessMCPServer:
             if not policy_decision.allowed:
                 return ToolResult.error_result(
                     f"Policy violation: {policy_decision.reason}"
-                ).dict()
+                ).model_dump()
             
             # Implement SFTP transfer
             result = await self.sftp_provider.transfer_file(
@@ -200,7 +200,7 @@ class OpenAccessMCPServer:
                     "bytes_transferred": result.bytes_transferred,
                     "checksum": result.checksum,
                     "status": "completed"
-                }).dict()
+                }).model_dump()
             else:
                 # Log failure
                 await self.audit_logger.log_tool_call(
@@ -220,7 +220,7 @@ class OpenAccessMCPServer:
                     metadata={"error": result.error}
                 )
                 
-                return ToolResult.error_result(f"SFTP transfer failed: {result.error}").dict()
+                return ToolResult.error_result(f"SFTP transfer failed: {result.error}").model_dump()
             
         except Exception as e:
             # Log error
@@ -241,7 +241,7 @@ class OpenAccessMCPServer:
                 metadata={"error": str(e)}
             )
             
-            return ToolResult.error_result(str(e)).dict()
+            return ToolResult.error_result(str(e)).model_dump()
     
     async def handle_rsync_sync(
         self,
@@ -267,7 +267,7 @@ class OpenAccessMCPServer:
             
             # Check if rsync is enabled
             if "rsync" not in profile.protocols:
-                return ToolResult.error_result("rsync not enabled for this profile").dict()
+                return ToolResult.error_result("rsync not enabled for this profile").model_dump()
             
             # Resolve secrets
             secret = await self.secret_store.resolve(profile.auth)
@@ -285,13 +285,13 @@ class OpenAccessMCPServer:
             if not policy_decision.allowed:
                 return ToolResult.error_result(
                     f"Policy violation: {policy_decision.reason}"
-                ).dict()
+                ).model_dump()
             
             # Check if delete_extras requires a change ticket
             if delete_extras and not change_ticket:
                 return ToolResult.error_result(
                     "Change ticket required for delete_extras operations"
-                ).dict()
+                ).model_dump()
             
             # Implement rsync sync
             result = await self.rsync_provider.sync(
@@ -344,7 +344,7 @@ class OpenAccessMCPServer:
                     "bytes_transferred": result.bytes_transferred,
                     "plan": result.plan,
                     "status": "completed"
-                }).dict()
+                }).model_dump()
             else:
                 # Log failure
                 await self.audit_logger.log_tool_call(
@@ -366,7 +366,7 @@ class OpenAccessMCPServer:
                     metadata={"error": result.error}
                 )
                 
-                return ToolResult.error_result(f"rsync sync failed: {result.error}").dict()
+                return ToolResult.error_result(f"rsync sync failed: {result.error}").model_dump()
             
         except Exception as e:
             # Log error
@@ -389,7 +389,7 @@ class OpenAccessMCPServer:
                 metadata={"error": str(e)}
             )
             
-            return ToolResult.error_result(str(e)).dict()
+            return ToolResult.error_result(str(e)).model_dump()
     
     async def handle_ssh_exec(
         self,
@@ -438,7 +438,7 @@ class OpenAccessMCPServer:
                 )
                 return ToolResult.error_result(
                     f"Policy violation: {policy_decision.reason}"
-                ).dict()
+                ).model_dump()
             
             # Handle dry run
             if dry_run:
@@ -455,7 +455,7 @@ class OpenAccessMCPServer:
                     metadata={"plan": plan}
                 )
                 
-                return ToolResult.dry_run_result(plan).dict()
+                return ToolResult.dry_run_result(plan).model_dump()
             
             # Execute command
             result = await self.ssh_provider.exec_command(
@@ -486,7 +486,7 @@ class OpenAccessMCPServer:
                 "stderr": result.stderr,
                 "exit_code": result.exit_code,
                 "session_id": result.session_id
-            }).dict()
+            }).model_dump()
             
         except Exception as e:
             # Log failure
@@ -499,7 +499,7 @@ class OpenAccessMCPServer:
                 metadata={"error": str(e)}
             )
             
-            return ToolResult.error_result(str(e)).dict()
+            return ToolResult.error_result(str(e)).model_dump()
     
     async def handle_tunnel_create(
         self,
@@ -523,7 +523,7 @@ class OpenAccessMCPServer:
             
             # Check if tunneling is enabled
             if "tunnel" not in profile.protocols:
-                return ToolResult.error_result("Tunneling not enabled for this profile").dict()
+                return ToolResult.error_result("Tunneling not enabled for this profile").model_dump()
             
             # Resolve secrets
             secret = await self.secret_store.resolve(profile.auth)
@@ -541,7 +541,7 @@ class OpenAccessMCPServer:
             if not policy_decision.allowed:
                 return ToolResult.error_result(
                     f"Policy violation: {policy_decision.reason}"
-                ).dict()
+                ).model_dump()
             
             # Create tunnel
             tunnel_info = await self.tunnel_provider.create_tunnel(
@@ -587,7 +587,7 @@ class OpenAccessMCPServer:
                 "target_port": tunnel_info.target_port,
                 "ttl_seconds": tunnel_info.ttl_seconds,
                 "expires_at": tunnel_info.expires_at
-            }).dict()
+            }).model_dump()
             
         except Exception as e:
             # Log failure
@@ -608,7 +608,7 @@ class OpenAccessMCPServer:
                 metadata={"error": str(e)}
             )
             
-            return ToolResult.error_result(str(e)).dict()
+            return ToolResult.error_result(str(e)).model_dump()
     
     async def handle_tunnel_close(
         self,
@@ -637,12 +637,12 @@ class OpenAccessMCPServer:
                 return ToolResult.success_result({
                     "tunnel_id": tunnel_id,
                     "status": "closed"
-                }).dict()
+                }).model_dump()
             else:
-                return ToolResult.error_result(f"Tunnel {tunnel_id} not found or already closed").dict()
+                return ToolResult.error_result(f"Tunnel {tunnel_id} not found or already closed").model_dump()
             
         except Exception as e:
-            return ToolResult.error_result(str(e)).dict()
+            return ToolResult.error_result(str(e)).model_dump()
     
     async def handle_vpn_wireguard_toggle(
         self,
@@ -664,7 +664,7 @@ class OpenAccessMCPServer:
             
             # Check if VPN is enabled
             if "vpn" not in profile.protocols:
-                return ToolResult.error_result("VPN not enabled for this profile").dict()
+                return ToolResult.error_result("VPN not enabled for this profile").model_dump()
             
             # Enforce policy
             policy_context = PolicyContext(
@@ -679,7 +679,7 @@ class OpenAccessMCPServer:
             if not policy_decision.allowed:
                 return ToolResult.error_result(
                     f"Policy violation: {policy_decision.reason}"
-                ).dict()
+                ).model_dump()
             
             # Toggle VPN
             vpn_status = await self.vpn_provider.wireguard_toggle(
@@ -715,10 +715,10 @@ class OpenAccessMCPServer:
                 "peer_id": vpn_status.peer_id,
                 "ip_address": vpn_status.ip_address,
                 "error": vpn_status.error
-            }).dict()
+            }).model_dump()
             
         except Exception as e:
-            return ToolResult.error_result(str(e)).dict()
+            return ToolResult.error_result(str(e)).model_dump()
     
     async def handle_rdp_launch(
         self,
@@ -739,7 +739,7 @@ class OpenAccessMCPServer:
             
             # Check if RDP is enabled
             if "rdp" not in profile.protocols:
-                return ToolResult.error_result("RDP not enabled for this profile").dict()
+                return ToolResult.error_result("RDP not enabled for this profile").model_dump()
             
             # Resolve secrets
             secret = await self.secret_store.resolve(profile.auth)
@@ -757,7 +757,7 @@ class OpenAccessMCPServer:
             if not policy_decision.allowed:
                 return ToolResult.error_result(
                     f"Policy violation: {policy_decision.reason}"
-                ).dict()
+                ).model_dump()
             
             # Create RDP connection
             connection = await self.rdp_provider.create_connection(
@@ -800,10 +800,10 @@ class OpenAccessMCPServer:
                 "connection_url": connection_url,
                 "expires_at": connection.expires_at,
                 "remaining_seconds": connection.remaining_seconds
-            }).dict()
+            }).model_dump()
             
         except Exception as e:
-            return ToolResult.error_result(str(e)).dict()
+            return ToolResult.error_result(str(e)).model_dump()
     
     async def _load_profile(self, profile_id: str) -> Profile:
         """Load a profile from the profiles directory."""
