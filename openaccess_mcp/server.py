@@ -237,7 +237,7 @@ class OpenAccessMCPServer:
                     "create_dirs": create_dirs,
                     "mode": mode
                 },
-                result="error",
+                result="failure",
                 metadata={"error": str(e)}
             )
             
@@ -385,7 +385,7 @@ class OpenAccessMCPServer:
                     "bandwidth_limit_kbps": bandwidth_limit_kbps,
                     "change_ticket": change_ticket
                 },
-                result="error",
+                result="failure",
                 metadata={"error": str(e)}
             )
             

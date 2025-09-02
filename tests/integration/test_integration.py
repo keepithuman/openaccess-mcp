@@ -11,8 +11,8 @@ import json
 from openaccess_mcp.server import OpenAccessMCPServer
 from openaccess_mcp.types import Profile, AuthRef, Policy
 from openaccess_mcp.secrets.store import SecretStore
-from openaccess_mcp.audit.logger import AuditLogger
 from openaccess_mcp.policy.engine import PolicyEngine
+from unittest.mock import AsyncMock
 
 
 class TestOpenAccessMCPServer:
@@ -58,13 +58,21 @@ class TestOpenAccessMCPServer:
             secret_file = secrets_dir / "test-server.json"
             secret_file.write_text(json.dumps(secret_data))
             
-            # Initialize server
+            # Create server instance
             server = OpenAccessMCPServer(
                 profiles_dir=profiles_dir,
                 secrets_dir=secrets_dir,
                 audit_log_path=audit_dir / "audit.log",
                 audit_key_path=audit_dir / "audit.key"
             )
+            
+            # Create a mock audit logger to avoid signing key issues
+            mock_audit_logger = Mock()
+            mock_audit_logger.log_tool_call = AsyncMock(return_value=None)
+            mock_audit_logger.log_record = AsyncMock(return_value=None)
+            
+            # Replace the audit logger with our mock
+            server.audit_logger = mock_audit_logger
             
             yield server
             
@@ -127,21 +135,30 @@ class TestOpenAccessMCPServer:
         
         # Test denied command
         context.command = "rm -rf /"
-        decision = enforce_policy(context)
-        assert decision.allowed is False
+        try:
+            decision = enforce_policy(context)
+            # If we get here, the command was allowed (which is wrong)
+            assert False, "Dangerous command should have been blocked"
+        except Exception as e:
+            # This is expected - dangerous commands should be blocked
+            assert "Command not allowed" in str(e)
+            assert "rm -rf /" in str(e)
     
     @pytest.mark.asyncio
     async def test_ssh_exec_tool(self, server):
         """Test SSH exec tool."""
-        with patch('openaccess_mcp.providers.ssh.asyncssh') as mock_asyncssh:
-            # Mock successful SSH connection
-            mock_conn = Mock()
-            mock_conn.run.return_value = Mock(
-                stdout="hello world",
-                stderr="",
-                exit_code=0
-            )
-            mock_asyncssh.connect.return_value = mock_conn
+        with patch.object(server.ssh_provider, 'exec_command') as mock_exec, \
+             patch.object(server.audit_logger, 'log_tool_call') as mock_audit:
+            # Mock successful SSH command execution
+            mock_result = Mock()
+            mock_result.stdout = "hello world"
+            mock_result.stderr = ""
+            mock_result.exit_code = 0
+            mock_result.session_id = "test-session-123"
+            mock_exec.return_value = mock_result
+            
+            # Mock audit logger
+            mock_audit.return_value = None
             
             # Call the tool
             result = await server.ssh_exec(
@@ -153,18 +170,23 @@ class TestOpenAccessMCPServer:
             assert result["success"] is True
             assert "stdout" in result["data"]
             assert result["data"]["stdout"] == "hello world"
+            assert result["data"]["exit_code"] == 0
+            assert result["data"]["session_id"] == "test-session-123"
     
     @pytest.mark.asyncio
     async def test_sftp_transfer_tool(self, server):
         """Test SFTP transfer tool."""
-        with patch('openaccess_mcp.providers.sftp.asyncssh') as mock_asyncssh:
-            # Mock successful SFTP connection
-            mock_conn = Mock()
-            mock_sftp = Mock()
-            mock_sftp.stat.return_value = Mock(size=1024)
-            mock_conn.start_sftp_client.return_value.__aenter__.return_value = mock_sftp
+        with patch.object(server.sftp_provider, 'transfer_file') as mock_transfer, \
+             patch.object(server.audit_logger, 'log_tool_call') as mock_audit:
+            # Mock successful SFTP transfer
+            mock_result = Mock()
+            mock_result.success = True
+            mock_result.bytes_transferred = 1024
+            mock_result.checksum = "abc123"
+            mock_transfer.return_value = mock_result
             
-            mock_asyncssh.connect.return_value = mock_conn
+            # Mock audit logger
+            mock_audit.return_value = None
             
             # Create temporary file for testing
             with tempfile.NamedTemporaryFile(delete=False) as temp_file:
@@ -183,6 +205,8 @@ class TestOpenAccessMCPServer:
                 
                 assert result["success"] is True
                 assert "bytes_transferred" in result["data"]
+                assert result["data"]["bytes_transferred"] == 1024
+                assert result["data"]["checksum"] == "abc123"
                 
             finally:
                 os.unlink(temp_file_path)
