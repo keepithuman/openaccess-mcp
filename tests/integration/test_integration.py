@@ -6,6 +6,7 @@ import tempfile
 import os
 from pathlib import Path
 from unittest.mock import patch, Mock
+import json
 
 from openaccess_mcp.server import OpenAccessMCPServer
 from openaccess_mcp.types import Profile, AuthRef, Policy
@@ -55,7 +56,7 @@ class TestOpenAccessMCPServer:
             }
             
             secret_file = secrets_dir / "test-server.json"
-            secret_file.write_text(str(secret_data))
+            secret_file.write_text(json.dumps(secret_data))
             
             # Initialize server
             server = OpenAccessMCPServer(
@@ -403,7 +404,7 @@ class TestEndToEndWorkflows:
             }
             
             secret_file = secrets_dir / "workflow-test.json"
-            secret_file.write_text(str(secret_data))
+            secret_file.write_text(json.dumps(secret_data))
             
             server = OpenAccessMCPServer(
                 profiles_dir=profiles_dir,
