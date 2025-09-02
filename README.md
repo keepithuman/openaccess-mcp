@@ -138,13 +138,28 @@ cd openaccess-mcp
 # Install with development dependencies
 pip install -e ".[dev]"
 
-# Or using uv (recommended for speed)
-uv sync
+# Or using uv (requires manual dependency installation)
+uv sync --extra dev
+uv pip install PyJWT prometheus-client
+uv pip install -e .
 ```
 
 ### **Local Development Setup**
 
 ```bash
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install in development mode
+pip install -e ".[dev]"
+
+# Test the installation
+python -c "from openaccess_mcp.server import OpenAccessMCPServer; print('✅ Installation successful!')"
+
+# Run the server
+python -m openaccess_mcp serve
+```
 # Start the MCP server
 openaccess-mcp start --profiles ./examples/profiles
 
@@ -172,6 +187,19 @@ openaccess-mcp start --profiles ./examples/profiles
 - **[Integration Guide](docs/integration.md)** - ChatGPT, Claude, and custom AI integration
 
 ## 🛠️ **Real-World Usage Examples**
+
+### **Test Your Installation First**
+```bash
+# Verify everything works
+source venv/bin/activate
+python -c "from openaccess_mcp.server import OpenAccessMCPServer; print('✅ Core MCP functionality ready!')"
+
+# Run unit tests
+python -m pytest tests/unit/ -v
+
+# Run integration tests  
+python -m pytest tests/integration/ -v
+```
 
 ### **Profile Configuration for Production**
 
