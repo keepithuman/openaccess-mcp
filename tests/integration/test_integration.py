@@ -401,7 +401,7 @@ class TestOpenAccessMCPServer:
             
             assert result["success"] is False
             assert "error" in result
-            assert "Policy violation" in result["error"]
+            assert "Command not allowed" in result["error"]
     
     @pytest.mark.asyncio
     async def test_server_cleanup(self, server):
