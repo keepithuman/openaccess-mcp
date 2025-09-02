@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  openaccess-mcp:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./examples/profiles:/app/profiles
+      - ./examples/secrets:/app/secrets
+      - ./audit:/app/audit
+    environment:
+      - PYTHONPATH=/app
+    command: ["python", "-m", "openaccess_mcp.server", "--profiles", "/app/profiles"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import openaccess_mcp; print('OK')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Demo SSH target for testing
+  ssh-target:
+    image: linuxserver/openssh-server:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+      - USER_NAME=testuser
+      - USER_PASSWORD=testpass
+    ports:
+      - "2222:2222"
+    volumes:
+      - ./examples/ssh-target:/config
+    command: ["/bin/bash", "-c", "echo 'testuser:testpass' | chpasswd && /init"]

@@ -1,0 +1,48 @@
+{
+  "id": "prod-web-01",
+  "host": "10.10.1.15",
+  "port": 22,
+  "protocols": ["ssh", "sftp", "rsync", "tunnel"],
+  "auth": {
+    "type": "file_ref",
+    "ref": "prod-web-01"
+  },
+  "policy": {
+    "roles": ["ops-oncall", "neteng-sre"],
+    "command_allowlist": [
+      "^cat\\b",
+      "^tail\\b",
+      "^head\\b",
+      "^grep\\b",
+      "^ls\\b",
+      "^pwd\\b",
+      "^systemctl status\\b",
+      "^journalctl\\b",
+      "^ps\\b",
+      "^df\\b",
+      "^free\\b",
+      "^uptime\\b",
+      "^who\\b",
+      "^w\\b"
+    ],
+    "command_denylist": [
+      "^rm\\b",
+      "^dd\\b",
+      "^mkfs\\b",
+      "^fdisk\\b",
+      "^mount\\b",
+      "^umount\\b"
+    ],
+    "deny_sudo": true,
+    "max_session_seconds": 900,
+    "record_session": true,
+    "require_change_ticket_for": [
+      "rsync.delete",
+      "tunnel.dynamic",
+      "vpn.up"
+    ],
+    "max_concurrent_sessions": 2
+  },
+  "tags": ["env:prod", "tier:web", "region:us-east"],
+  "description": "Production web server for main application"
+}

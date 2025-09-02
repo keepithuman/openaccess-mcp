@@ -1,0 +1,45 @@
+{
+  "id": "dev-test-01",
+  "host": "10.10.2.20",
+  "port": 22,
+  "protocols": ["ssh", "sftp", "rsync"],
+  "auth": {
+    "type": "file_ref",
+    "ref": "dev-test-01"
+  },
+  "policy": {
+    "roles": ["developers", "qa-team"],
+    "command_allowlist": [
+      "^cat\\b",
+      "^tail\\b",
+      "^head\\b",
+      "^grep\\b",
+      "^ls\\b",
+      "^pwd\\b",
+      "^ps\\b",
+      "^df\\b",
+      "^free\\b",
+      "^uptime\\b",
+      "^git\\b",
+      "^npm\\b",
+      "^python\\b",
+      "^node\\b"
+    ],
+    "command_denylist": [
+      "^rm\\b",
+      "^dd\\b",
+      "^mkfs\\b",
+      "^fdisk\\b",
+      "^mount\\b",
+      "^umount\\b",
+      "^sudo\\b"
+    ],
+    "deny_sudo": true,
+    "max_session_seconds": 1800,
+    "record_session": true,
+    "require_change_ticket_for": [],
+    "max_concurrent_sessions": 5
+  },
+  "tags": ["env:dev", "tier:test", "region:us-east"],
+  "description": "Development and testing server"
+}
