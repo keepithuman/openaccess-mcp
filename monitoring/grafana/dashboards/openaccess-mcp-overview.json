@@ -1,0 +1,368 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "OpenAccess MCP Overview",
+    "tags": ["openaccess-mcp", "monitoring", "overview"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Overall Success Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "openaccess_mcp_overall_success_rate * 100",
+            "legendFormat": "Success Rate"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 90},
+                {"color": "green", "value": 95}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Active Connections",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "openaccess_mcp_active_connections_total",
+            "legendFormat": "Active Connections"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 50},
+                {"color": "red", "value": 80}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Memory Usage",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "openaccess_mcp_memory_usage_percent",
+            "legendFormat": "Memory Usage"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 70},
+                {"color": "red", "value": 85}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0}
+      },
+      {
+        "id": 4,
+        "title": "CPU Usage",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "openaccess_mcp_cpu_usage_percent",
+            "legendFormat": "CPU Usage"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 70},
+                {"color": "red", "value": 85}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0}
+      },
+      {
+        "id": 5,
+        "title": "Operations per Second",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(openaccess_mcp_ssh_operations_total[5m])",
+            "legendFormat": "SSH"
+          },
+          {
+            "expr": "rate(openaccess_mcp_sftp_operations_total[5m])",
+            "legendFormat": "SFTP"
+          },
+          {
+            "expr": "rate(openaccess_mcp_rsync_operations_total[5m])",
+            "legendFormat": "Rsync"
+          },
+          {
+            "expr": "rate(openaccess_mcp_tunnel_operations_total[5m])",
+            "legendFormat": "Tunnel"
+          },
+          {
+            "expr": "rate(openaccess_mcp_vpn_operations_total[5m])",
+            "legendFormat": "VPN"
+          },
+          {
+            "expr": "rate(openaccess_mcp_rdp_operations_total[5m])",
+            "legendFormat": "RDP"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Operations/sec",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "id": 6,
+        "title": "Response Time (95th Percentile)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "openaccess_mcp_ssh_p95_response_time",
+            "legendFormat": "SSH"
+          },
+          {
+            "expr": "openaccess_mcp_sftp_p95_response_time",
+            "legendFormat": "SFTP"
+          },
+          {
+            "expr": "openaccess_mcp_rsync_p95_response_time",
+            "legendFormat": "Rsync"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Response Time (seconds)",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+      },
+      {
+        "id": 7,
+        "title": "Success Rate by Operation",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "openaccess_mcp_ssh_success_rate * 100",
+            "legendFormat": "SSH"
+          },
+          {
+            "expr": "openaccess_mcp_sftp_success_rate * 100",
+            "legendFormat": "SFTP"
+          },
+          {
+            "expr": "openaccess_mcp_rsync_success_rate * 100",
+            "legendFormat": "Rsync"
+          },
+          {
+            "expr": "openaccess_mcp_tunnel_success_rate * 100",
+            "legendFormat": "Tunnel"
+          },
+          {
+            "expr": "openaccess_mcp_vpn_success_rate * 100",
+            "legendFormat": "VPN"
+          },
+          {
+            "expr": "openaccess_mcp_rdp_success_rate * 100",
+            "legendFormat": "RDP"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Success Rate (%)",
+            "min": 0,
+            "max": 100
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+      },
+      {
+        "id": 8,
+        "title": "Error Rate by Operation",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(openaccess_mcp_ssh_operations_total{result=\"failure\"}[5m])",
+            "legendFormat": "SSH Errors"
+          },
+          {
+            "expr": "rate(openaccess_mcp_sftp_operations_total{result=\"failure\"}[5m])",
+            "legendFormat": "SFTP Errors"
+          },
+          {
+            "expr": "rate(openaccess_mcp_rsync_operations_total{result=\"failure\"}[5m])",
+            "legendFormat": "Rsync Errors"
+          },
+          {
+            "expr": "rate(openaccess_mcp_tunnel_operations_total{result=\"failure\"}[5m])",
+            "legendFormat": "Tunnel Errors"
+          },
+          {
+            "expr": "rate(openaccess_mcp_vpn_operations_total{result=\"failure\"}[5m])",
+            "legendFormat": "VPN Errors"
+          },
+          {
+            "expr": "rate(openaccess_mcp_rdp_operations_total{result=\"failure\"}[5m])",
+            "legendFormat": "RDP Errors"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Errors/sec",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+      },
+      {
+        "id": 9,
+        "title": "Cache Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "openaccess_mcp_cache_hit_rate * 100",
+            "legendFormat": "Cache Hit Rate"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Hit Rate (%)",
+            "min": 0,
+            "max": 100
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24}
+      },
+      {
+        "id": 10,
+        "title": "Security Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "openaccess_mcp_policy_violations_rate",
+            "legendFormat": "Policy Violations"
+          },
+          {
+            "expr": "openaccess_mcp_auth_failures_rate",
+            "legendFormat": "Auth Failures"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Events/sec",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24}
+      },
+      {
+        "id": 11,
+        "title": "System Resources",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes",
+            "legendFormat": "Memory Used"
+          },
+          {
+            "expr": "node_filesystem_size_bytes - node_filesystem_free_bytes",
+            "legendFormat": "Disk Used"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Bytes",
+            "unit": "bytes"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 32}
+      },
+      {
+        "id": 12,
+        "title": "Network I/O",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(node_network_receive_bytes_total[5m])",
+            "legendFormat": "Network Receive"
+          },
+          {
+            "expr": "rate(node_network_transmit_bytes_total[5m])",
+            "legendFormat": "Network Transmit"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Bytes/sec",
+            "unit": "Bps"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 32}
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"]
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "instance",
+          "type": "query",
+          "query": "label_values(up{job=\"openaccess-mcp\"}, instance)",
+          "refresh": 2
+        },
+        {
+          "name": "profile_id",
+          "type": "query",
+          "query": "label_values(openaccess_mcp_operations_total, profile_id)",
+          "refresh": 2
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "Prometheus",
+          "expr": "changes(openaccess_mcp_version_info[5m]) > 0",
+          "iconColor": "blue"
+        }
+      ]
+    }
+  }
+}

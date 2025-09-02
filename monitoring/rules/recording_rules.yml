@@ -1,0 +1,117 @@
+groups:
+  - name: openaccess_mcp_recording_rules
+    interval: 30s
+    rules:
+      # SSH operation success rate
+      - record: openaccess_mcp_ssh_success_rate
+        expr: |
+          rate(openaccess_mcp_ssh_operations_total{result="success"}[5m]) /
+          rate(openaccess_mcp_ssh_operations_total[5m])
+
+      # SFTP transfer success rate
+      - record: openaccess_mcp_sftp_success_rate
+        expr: |
+          rate(openaccess_mcp_sftp_operations_total{result="success"}[5m]) /
+          rate(openaccess_mcp_sftp_operations_total[5m])
+
+      # Rsync sync success rate
+      - record: openaccess_mcp_rsync_success_rate
+        expr: |
+          rate(openaccess_mcp_rsync_operations_total{result="success"}[5m]) /
+          rate(openaccess_mcp_rsync_operations_total[5m])
+
+      # Tunnel creation success rate
+      - record: openaccess_mcp_tunnel_success_rate
+        expr: |
+          rate(openaccess_mcp_tunnel_operations_total{result="success"}[5m]) /
+          rate(openaccess_mcp_tunnel_operations_total[5m])
+
+      # VPN toggle success rate
+      - record: openaccess_mcp_vpn_success_rate
+        expr: |
+          rate(openaccess_mcp_vpn_operations_total{result="success"}[5m]) /
+          rate(openaccess_mcp_vpn_operations_total[5m])
+
+      # RDP launch success rate
+      - record: openaccess_mcp_rdp_success_rate
+        expr: |
+          rate(openaccess_mcp_rdp_operations_total{result="success"}[5m]) /
+          rate(openaccess_mcp_rdp_operations_total[5m])
+
+      # Overall operation success rate
+      - record: openaccess_mcp_overall_success_rate
+        expr: |
+          (
+            rate(openaccess_mcp_ssh_operations_total{result="success"}[5m]) +
+            rate(openaccess_mcp_sftp_operations_total{result="success"}[5m]) +
+            rate(openaccess_mcp_rsync_operations_total{result="success"}[5m]) +
+            rate(openaccess_mcp_tunnel_operations_total{result="success"}[5m]) +
+            rate(openaccess_mcp_vpn_operations_total{result="success"}[5m]) +
+            rate(openaccess_mcp_rdp_operations_total{result="success"}[5m])
+          ) /
+          (
+            rate(openaccess_mcp_ssh_operations_total[5m]) +
+            rate(openaccess_mcp_sftp_operations_total[5m]) +
+            rate(openaccess_mcp_rsync_operations_total[5m]) +
+            rate(openaccess_mcp_tunnel_operations_total[5m]) +
+            rate(openaccess_mcp_vpn_operations_total[5m]) +
+            rate(openaccess_mcp_rdp_operations_total[5m])
+          )
+
+      # Average response time by operation type
+      - record: openaccess_mcp_ssh_avg_response_time
+        expr: |
+          rate(openaccess_mcp_ssh_operation_duration_seconds_sum[5m]) /
+          rate(openaccess_mcp_ssh_operation_duration_seconds_count[5m])
+
+      - record: openaccess_mcp_sftp_avg_response_time
+        expr: |
+          rate(openaccess_mcp_sftp_operation_duration_seconds_sum[5m]) /
+          rate(openaccess_mcp_sftp_operation_duration_seconds_count[5m])
+
+      - record: openaccess_mcp_rsync_avg_response_time
+        expr: |
+          rate(openaccess_mcp_rsync_operation_duration_seconds_sum[5m]) /
+          rate(openaccess_mcp_rsync_operation_duration_seconds_count[5m])
+
+      # 95th percentile response time
+      - record: openaccess_mcp_ssh_p95_response_time
+        expr: histogram_quantile(0.95, rate(openaccess_mcp_ssh_operation_duration_seconds_bucket[5m]))
+
+      - record: openaccess_mcp_sftp_p95_response_time
+        expr: histogram_quantile(0.95, rate(openaccess_mcp_sftp_operation_duration_seconds_bucket[5m]))
+
+      - record: openaccess_mcp_rsync_p95_response_time
+        expr: histogram_quantile(0.95, rate(openaccess_mcp_rsync_operation_duration_seconds_bucket[5m]))
+
+      # Active connections by profile
+      - record: openaccess_mcp_active_connections_total
+        expr: sum(openaccess_mcp_active_connections)
+
+      # Memory usage percentage
+      - record: openaccess_mcp_memory_usage_percent
+        expr: |
+          (openaccess_mcp_memory_bytes / openaccess_mcp_memory_limit_bytes) * 100
+
+      # CPU usage percentage
+      - record: openaccess_mcp_cpu_usage_percent
+        expr: |
+          rate(openaccess_mcp_cpu_seconds_total[5m]) * 100
+
+      # Cache hit rate
+      - record: openaccess_mcp_cache_hit_rate
+        expr: |
+          rate(openaccess_mcp_cache_hits_total[5m]) /
+          (rate(openaccess_mcp_cache_hits_total[5m]) + rate(openaccess_mcp_cache_misses_total[5m]))
+
+      # Policy violations rate
+      - record: openaccess_mcp_policy_violations_rate
+        expr: rate(openaccess_mcp_policy_violations_total[5m])
+
+      # Authentication failures rate
+      - record: openaccess_mcp_auth_failures_rate
+        expr: rate(openaccess_mcp_auth_failures_total[5m])
+
+      # Audit log entries rate
+      - record: openaccess_mcp_audit_logs_rate
+        expr: rate(openaccess_mcp_audit_log_entries_total[5m])

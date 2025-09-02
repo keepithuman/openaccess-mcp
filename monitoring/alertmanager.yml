@@ -1,0 +1,78 @@
+global:
+  resolve_timeout: 5m
+  slack_api_url: 'https://hooks.slack.com/services/YOUR_SLACK_WEBHOOK'
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'alertmanager@openaccess-mcp.dev'
+  smtp_auth_username: 'your-email@gmail.com'
+  smtp_auth_password: 'your-app-password'
+
+route:
+  group_by: ['alertname', 'service', 'severity']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'slack-notifications'
+  routes:
+    - match:
+        severity: critical
+      receiver: 'pager-duty-critical'
+      continue: true
+    - match:
+        severity: warning
+      receiver: 'slack-notifications'
+    - match:
+        service: infrastructure
+      receiver: 'ops-team'
+
+receivers:
+  - name: 'slack-notifications'
+    slack_configs:
+      - channel: '#openaccess-mcp-alerts'
+        title: 'OpenAccess MCP Alert'
+        text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ .Annotations.description }}{{ end }}'
+        send_resolved: true
+        icon_url: 'https://avatars.githubusercontent.com/u/1234567?s=200&v=4'
+        title_link: '{{ template "slack.default.titlelink" . }}'
+        footer: '{{ template "slack.default.footer" . }}'
+        actions:
+          - type: button
+            text: 'View in Grafana'
+            url: '{{ template "slack.default.titlelink" . }}'
+
+  - name: 'pager-duty-critical'
+    pagerduty_configs:
+      - routing_key: 'your-pagerduty-routing-key'
+        description: '{{ template "pagerduty.default.description" . }}'
+        severity: '{{ if eq .CommonLabels.severity "critical" }}critical{{ else }}warning{{ end }}'
+        client: 'OpenAccess MCP Alertmanager'
+        client_url: '{{ template "pagerduty.default.clientURL" . }}'
+        class: '{{ template "pagerduty.default.class" . }}'
+        group: '{{ template "pagerduty.default.group" . }}'
+        details:
+          firing: '{{ template "pagerduty.default.firing" . }}'
+          num_firing: '{{ .Alerts.Firing | len }}'
+          num_resolved: '{{ .Alerts.Resolved | len }}'
+          resolved: '{{ template "pagerduty.default.resolved" . }}'
+
+  - name: 'ops-team'
+    email_configs:
+      - to: 'ops@openaccess-mcp.dev'
+        send_resolved: true
+        headers:
+          subject: 'OpenAccess MCP Infrastructure Alert'
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'service']
+
+  - source_match:
+      alertname: 'ServiceDown'
+    target_match:
+      alertname: 'ServiceHighLatency'
+    equal: ['instance']
+
+templates:
+  - '/etc/alertmanager/template/*.tmpl'

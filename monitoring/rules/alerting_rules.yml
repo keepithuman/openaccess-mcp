@@ -1,0 +1,238 @@
+groups:
+  - name: openaccess_mcp_alerts
+    rules:
+      # High error rate alerts
+      - alert: HighErrorRate
+        expr: openaccess_mcp_overall_success_rate < 0.95
+        for: 5m
+        labels:
+          severity: warning
+          service: openaccess-mcp
+        annotations:
+          summary: "High error rate detected"
+          description: "Overall success rate is {{ $value | humanizePercentage }} (below 95%)"
+
+      - alert: CriticalErrorRate
+        expr: openaccess_mcp_overall_success_rate < 0.90
+        for: 2m
+        labels:
+          severity: critical
+          service: openaccess-mcp
+        annotations:
+          summary: "Critical error rate detected"
+          description: "Overall success rate is {{ $value | humanizePercentage }} (below 90%)"
+
+      # SSH operation alerts
+      - alert: SSHHighErrorRate
+        expr: openaccess_mcp_ssh_success_rate < 0.95
+        for: 5m
+        labels:
+          severity: warning
+          service: openaccess-mcp
+          operation: ssh
+        annotations:
+          summary: "High SSH error rate"
+          description: "SSH success rate is {{ $value | humanizePercentage }} (below 95%)"
+
+      - alert: SSHHighLatency
+        expr: openaccess_mcp_ssh_p95_response_time > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          service: openaccess-mcp
+          operation: ssh
+        annotations:
+          summary: "High SSH latency"
+          description: "SSH 95th percentile response time is {{ $value }}s (above 1s)"
+
+      # SFTP operation alerts
+      - alert: SFTPHighErrorRate
+        expr: openaccess_mcp_sftp_success_rate < 0.95
+        for: 5m
+        labels:
+          severity: warning
+          service: openaccess-mcp
+          operation: sftp
+        annotations:
+          summary: "High SFTP error rate"
+          description: "SFTP success rate is {{ $value | humanizePercentage }} (below 95%)"
+
+      - alert: SFTPHighLatency
+        expr: openaccess_mcp_sftp_p95_response_time > 5.0
+        for: 5m
+        labels:
+          severity: warning
+          service: openaccess-mcp
+          operation: sftp
+        annotations:
+          summary: "High SFTP latency"
+          description: "SFTP 95th percentile response time is {{ $value }}s (above 5s)"
+
+      # Rsync operation alerts
+      - alert: RsyncHighErrorRate
+        expr: openaccess_mcp_rsync_success_rate < 0.95
+        for: 5m
+        labels:
+          severity: warning
+          service: openaccess-mcp
+          operation: rsync
+        annotations:
+          summary: "High Rsync error rate"
+          description: "Rsync success rate is {{ $value | humanizePercentage }} (below 95%)"
+
+      - alert: RsyncHighLatency
+        expr: openaccess_mcp_rsync_p95_response_time > 30.0
+        for: 5m
+        labels:
+          severity: warning
+          service: openaccess-mcp
+          operation: rsync
+        annotations:
+          summary: "High Rsync latency"
+          description: "Rsync 95th percentile response time is {{ $value }}s (above 30s)"
+
+      # Resource usage alerts
+      - alert: HighMemoryUsage
+        expr: openaccess_mcp_memory_usage_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: openaccess-mcp
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value }}% (above 80%)"
+
+      - alert: CriticalMemoryUsage
+        expr: openaccess_mcp_memory_usage_percent > 90
+        for: 2m
+        labels:
+          severity: critical
+          service: openaccess-mcp
+        annotations:
+          summary: "Critical memory usage"
+          description: "Memory usage is {{ $value }}% (above 90%)"
+
+      - alert: HighCPUUsage
+        expr: openaccess_mcp_cpu_usage_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: openaccess-mcp
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}% (above 80%)"
+
+      - alert: CriticalCPUUsage
+        expr: openaccess_mcp_cpu_usage_percent > 90
+        for: 2m
+        labels:
+          severity: critical
+          service: openaccess-mcp
+        annotations:
+          summary: "Critical CPU usage"
+          description: "CPU usage is {{ $value }}% (above 90%)"
+
+      # Connection alerts
+      - alert: HighConnectionCount
+        expr: openaccess_mcp_active_connections_total > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: openaccess-mcp
+        annotations:
+          summary: "High connection count"
+          description: "Active connections: {{ $value }} (above 80)"
+
+      - alert: ConnectionLimitReached
+        expr: openaccess_mcp_active_connections_total > 95
+        for: 2m
+        labels:
+          severity: critical
+          service: openaccess-mcp
+        annotations:
+          summary: "Connection limit nearly reached"
+          description: "Active connections: {{ $value }} (above 95)"
+
+      # Cache performance alerts
+      - alert: LowCacheHitRate
+        expr: openaccess_mcp_cache_hit_rate < 0.7
+        for: 5m
+        labels:
+          severity: warning
+          service: openaccess-mcp
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is {{ $value | humanizePercentage }} (below 70%)"
+
+      # Security alerts
+      - alert: HighPolicyViolations
+        expr: openaccess_mcp_policy_violations_rate > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: openaccess-mcp
+        annotations:
+          summary: "High policy violation rate"
+          description: "Policy violations: {{ $value }} per second (above 0.1)"
+
+      - alert: HighAuthFailures
+        expr: openaccess_mcp_auth_failures_rate > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: openaccess-mcp
+        annotations:
+          summary: "High authentication failure rate"
+          description: "Auth failures: {{ $value }} per second (above 0.1)"
+
+      # Service health alerts
+      - alert: ServiceDown
+        expr: up{job="openaccess-mcp"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: openaccess-mcp
+        annotations:
+          summary: "OpenAccess MCP service is down"
+          description: "Service has been down for more than 1 minute"
+
+      - alert: ServiceHighLatency
+        expr: up{job="openaccess-mcp"} == 1 and scrape_duration_seconds{job="openaccess-mcp"} > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: openaccess-mcp
+        annotations:
+          summary: "Service response is slow"
+          description: "Scrape duration is {{ $value }}s (above 5s)"
+
+      # Infrastructure alerts
+      - alert: NodeHighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "High node memory usage"
+          description: "Node memory usage is {{ $value }}% (above 85%)"
+
+      - alert: NodeHighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "High node CPU usage"
+          description: "Node CPU usage is {{ $value }}% (above 80%)"
+
+      - alert: NodeHighDiskUsage
+        expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "High node disk usage"
+          description: "Node disk usage is {{ $value }}% (above 85%)"
